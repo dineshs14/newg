@@ -1,0 +1,25 @@
+// src/types.ts (AFTER)
+export interface Address {
+  street: string;
+  city: string;
+  zip: string;
+  // phone field removed per GDPR compliance (KS-107)
+}
+
+// src/components/CheckoutForm.tsx (AFTER)
+import { Address } from '../types';
+
+interface Props {
+  address: Address;
+}
+
+export function CheckoutForm({ address }: Props) {
+  return (
+    <fieldset>
+      <legend>Shipping Address</legend>
+      <input name="street" value={address.street} />
+      <input name="city" value={address.city} />
+      <input name="zip" value={address.zip} />
+    </fieldset>
+  );
+}

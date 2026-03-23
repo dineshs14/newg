@@ -1,0 +1,13 @@
+TICKET ID: KS-107
+TITLE: Remove phone field from checkout (GDPR compliance)
+PRIORITY: High
+STATUS: In Progress
+
+DESCRIPTION:
+Per GDPR audit, we must stop collecting phone numbers at checkout.
+Remove the phone field from the Address interface and all UI that uses it.
+
+ACCEPTANCE CRITERIA:
+- types.ts Address interface has no phone field
+- CheckoutForm no longer renders phone input
+- Existing orders still load correctly

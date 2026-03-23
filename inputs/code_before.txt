@@ -1,0 +1,62 @@
+// src/types.ts (BEFORE)
+export interface Address {
+  street: string;
+  city: string;
+  zip: string;
+  phone: string;
+}
+
+// src/components/CheckoutForm.tsx (BEFORE)
+import { Address } from '../types';
+
+interface Props {
+  address: Address;
+}
+
+export function CheckoutForm({ address }: Props) {
+  return (
+    <fieldset>
+      <legend>Shipping Address</legend>
+      <input name="street" value={address.street} />
+      <input name="city" value={address.city} />
+      <input name="zip" value={address.zip} />
+      <label>Phone</label>
+      <input name="phone" value={address.phone} />
+    </fieldset>
+  );
+}
+
+// src/constants.ts
+export const MOCK_ADDRESS: Address = {
+  street: "123 Main St",
+  city: "Springfield",
+  zip: "62701",
+  phone: "555-0123",
+};
+
+// src/services/orderService.ts
+export async function submitOrder(address: Address) {
+  return fetch("/api/orders", {
+    method: "POST",
+    body: JSON.stringify({
+      shipping: {
+        street: address.street,
+        city: address.city,
+        zip: address.zip,
+        phone: address.phone,
+      },
+    }),
+  });
+}
+
+// src/App.tsx
+function App() {
+  const [address, setAddress] = useState<Address>(MOCK_ADDRESS);
+  return (
+    <div>
+      <h1>Checkout</h1>
+      <CheckoutForm address={address} />
+      <p>Contact: {address.phone}</p>
+    </div>
+  );
+}

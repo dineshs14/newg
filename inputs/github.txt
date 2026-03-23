@@ -1,0 +1,38 @@
+PR TITLE: Remove phone field from Address interface
+PR NUMBER: #107
+REPO: kaizen-team/kani-store
+AUTHOR: dev-team
+BASE BRANCH: main
+HEAD BRANCH: feature/KS-107-remove-phone-gdpr
+
+PR DESCRIPTION:
+Removes the phone number field from the Address interface and all
+related UI components to comply with GDPR audit findings.
+No migration provided yet for existing database records.
+
+CHANGED FILES:
+- src/types.ts (modified)
+- src/components/CheckoutForm.tsx (modified)
+
+DIFF:
+diff --git a/src/types.ts b/src/types.ts
+--- a/src/types.ts
++++ b/src/types.ts
+@@ -3,7 +3,6 @@ export interface Address {
+   street: string;
+   city: string;
+   zip: string;
+-  phone: string;
+ }
+
+diff --git a/src/components/CheckoutForm.tsx b/src/components/CheckoutForm.tsx
+--- a/src/components/CheckoutForm.tsx
++++ b/src/components/CheckoutForm.tsx
+@@ -12,10 +12,6 @@ export function CheckoutForm({ address }: Props) {
+       <input name="city" value={address.city} />
+       <input name="zip" value={address.zip} />
+-      <label>Phone</label>
+-      <input name="phone" value={address.phone} />
+     </fieldset>
+   );
+ }
