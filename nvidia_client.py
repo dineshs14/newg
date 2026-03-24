@@ -101,7 +101,6 @@ def call_nvidia(prompt: str, show_thinking: bool = False) -> str:
             max_tokens=MAX_TOKENS,
             extra_body={
                 "chat_template_kwargs": {"enable_thinking": True},
-                "reasoning_budget": REASONING_BUDGET,
             },
             stream=True,
         )

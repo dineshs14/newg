@@ -1,0 +1,21 @@
+# Python cache/artifacts
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# Local config/secrets
+.env
+
+# Generated outputs
+outputs/
+demo-project-repo/outputs/
+
+# Temporary demo repo
+demo-project-repo/
+
+# OS/editor
+.DS_Store
+Thumbs.db

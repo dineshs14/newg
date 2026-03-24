@@ -46,3 +46,9 @@ OPTIONAL_FILES = {"code_before", "code_after", "repo_structure"}
 
 # ── Output Directory ─────────────────────────────────────────────────────────
 OUTPUT_DIR = "outputs"
+
+# ── Approval & CI/CD Settings ──────────────────────────────────────────────────
+APPROVAL_MODE = os.environ.get("APPROVAL_MODE", "browser")  # 'browser' | 'cli' | 'auto'
+AUTO_APPLY_CHANGES = os.environ.get("AUTO_APPLY_CHANGES", "false").lower() == "true"
+PR_FORMAT = os.environ.get("PR_FORMAT", "text")  # 'text' | 'json' | 'both'
+DEMO_MODE = os.environ.get("DEMO_MODE", "false").lower() == "true"

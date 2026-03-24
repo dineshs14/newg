@@ -8,6 +8,7 @@ in the default browser. Works on Windows, Mac, and Linux.
 import os
 import re
 import html
+import json
 from datetime import datetime
 from config import OUTPUT_DIR, MODEL_NAME
 
@@ -135,6 +136,8 @@ def generate_html_report(
     timestamp: str,
     files_used: list[str],
     is_demo: bool = False,
+    proposed_changes: list[dict] | None = None,
+    ticket_id: str = "KS-107",
 ) -> str:
     """Generate a self-contained HTML report string."""
 
@@ -179,6 +182,8 @@ def generate_html_report(
             🎮 DEMO MODE — Using simulated analysis. Set NVIDIA_API_KEY for production.
         </div>
         """
+
+    proposed_changes_json = json.dumps(proposed_changes or [], ensure_ascii=False)
 
     html_doc = f"""<!DOCTYPE html>
 <html lang="en">
@@ -580,6 +585,10 @@ def generate_html_report(
             <h2>✅ Approval Workflow</h2>
             <div class="section-content">
                 <p><strong>Review and Approve Code Changes:</strong></p>
+                <div style="margin-top: 0.75rem; margin-bottom: 1rem;">
+                    <label for="project-root-input" style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Target Project Root (for CLI apply)</label>
+                    <input id="project-root-input" type="text" value="demo-project-repo" style="width: 100%; max-width: 420px; padding: 0.55rem 0.7rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-3); color: var(--text-primary);" />
+                </div>
                 <div id="approvals-list" style="margin-top: 1.5rem;">
                     <p style="color: var(--text-muted); font-style: italic;">
                         💡 Tip: Tick changes below to approve them for code patching.
@@ -611,6 +620,8 @@ def generate_html_report(
         <script>
             // Approval workflow state
             let approvalState = {{}};
+            const proposedChanges = {proposed_changes_json};
+            const ticketId = {json.dumps(ticket_id)};
 
             function approveAll() {{
                 document.querySelectorAll('.approval-checkbox').forEach(cb => {{
@@ -634,13 +645,13 @@ def generate_html_report(
             }}
 
             function exportApprovals() {{
-                const approved = Object.entries(approvalState)
-                    .filter(([_, approved]) => approved)
-                    .map(([id, _]) => id);
+                const approved = proposedChanges.filter((_, idx) => approvalState[idx]);
+                const projectRoot = document.getElementById('project-root-input')?.value?.trim() || '.';
                 
                 const exportData = {{
-                    ticket_id: 'KS-107',
+                    ticket_id: ticketId,
                     approved_changes: approved,
+                    project_root: projectRoot,
                     timestamp: new Date().toISOString()
                 }};
 
@@ -651,13 +662,12 @@ def generate_html_report(
                 a.href = url;
                 a.download = 'approvals.json';
                 a.click();
-                logAction('📥 Exported ' + approved.length + ' approvals');
+                logAction('📥 Exported ' + approved.length + ' full approval object(s)');
             }}
 
             function applyChanges() {{
-                const approved = Object.entries(approvalState)
-                    .filter(([_, approved]) => approved)
-                    .map(([id, _]) => id);
+                const approved = proposedChanges.filter((_, idx) => approvalState[idx]);
+                const projectRoot = document.getElementById('project-root-input')?.value?.trim() || '.';
 
                 if (approved.length === 0) {{
                     alert('⚠️  No changes approved. Tick at least one change to apply.');
@@ -667,13 +677,26 @@ def generate_html_report(
                 const confirmed = confirm(`Apply ${{approved.length}} approved change(s)? This will modify your codebase.`);
                 if (!confirmed) return;
 
-                logAction(`⚡ Applying ${{approved.length}} change(s)...`);
-                // In a real implementation, this would call the backend API
-                // For now, we'll just log it
-                setTimeout(() => {{
-                    logAction('✓ Changes applied successfully! (See outputs/candidate_pr.txt)');
-                    logAction('📝 PR generated: outputs/candidate_pr.txt');
-                }}, 1000);
+                logAction(`⚡ Preparing ${{approved.length}} approved change(s) for CLI apply...`);
+
+                const exportData = {{
+                    ticket_id: ticketId,
+                    approved_changes: approved,
+                    project_root: projectRoot,
+                    timestamp: new Date().toISOString()
+                }};
+
+                const json = JSON.stringify(exportData, null, 2);
+                const blob = new Blob([json], {{ type: 'application/json' }});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'approvals.json';
+                a.click();
+
+                logAction('✓ approvals.json downloaded.');
+                logAction(`▶ Run: python agent.py --apply --approvals approvals.json --project-root ${{projectRoot}} --no-confirm`);
+                logAction('📝 After apply, PR files are regenerated under the target outputs folder.');
             }}
 
             function logAction(message) {{
@@ -687,23 +710,25 @@ def generate_html_report(
                 logContent.scrollTop = logContent.scrollHeight;
             }}
 
-            // Initialize checkboxes (placeholder - would be populated from AI analysis)
+            // Initialize checkboxes from real analyzed changes
             document.addEventListener('DOMContentLoaded', () => {{
-                const exampleChanges = [
-                    {{ id: 'change-1', file: 'src/types.ts', operation: 'modify' }},
-                    {{ id: 'change-2', file: 'src/constants.ts', operation: 'modify' }},
-                    {{ id: 'change-3', file: 'src/services/orderService.ts', operation:'modify' }}
-                ];
-
                 const approvalsList = document.getElementById('approvals-list');
                 approvalsList.innerHTML = '';
                 
-                exampleChanges.forEach(change => {{
+                if (!proposedChanges.length) {{
+                    const empty = document.createElement('p');
+                    empty.style.color = 'var(--text-muted)';
+                    empty.textContent = 'No structured changes found in analysis output.';
+                    approvalsList.appendChild(empty);
+                    return;
+                }}
+
+                proposedChanges.forEach((change, idx) => {{
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
                     checkbox.className = 'approval-checkbox';
-                    checkbox.id = change.id;
-                    checkbox.dataset.changeId = change.id;
+                    checkbox.id = `change-${{idx + 1}}`;
+                    checkbox.dataset.changeId = String(idx);
                     checkbox.onchange = function() {{ updateApprovalState(this); }};
 
                     const label = document.createElement('label');
@@ -714,7 +739,9 @@ def generate_html_report(
                     label.style.cursor = 'pointer';
                     label.appendChild(checkbox);
 
-                    const text = document.createTextNode(`${{change.operation.toUpperCase()}} — ${{change.file}}`);
+                    const file = change.file || 'unknown-file';
+                    const operation = (change.operation || 'modify').toUpperCase();
+                    const text = document.createTextNode(`${{operation}} — ${{file}}`);
                     label.appendChild(text);
                     approvalsList.appendChild(label);
                 }});
@@ -776,6 +803,8 @@ def save_html_report(
     timestamp: str,
     files_used: list[str],
     is_demo: bool = False,
+    proposed_changes: list[dict] | None = None,
+    ticket_id: str = "KS-107",
 ) -> str:
     """
     Generate and save an HTML report.
@@ -789,7 +818,14 @@ def save_html_report(
     filename = f"analysis_{mode}_{safe_ts}.html"
     filepath = os.path.join(OUTPUT_DIR, filename)
 
-    html_content = generate_html_report(sections, timestamp, files_used, is_demo)
+    html_content = generate_html_report(
+        sections,
+        timestamp,
+        files_used,
+        is_demo,
+        proposed_changes=proposed_changes,
+        ticket_id=ticket_id,
+    )
 
     with open(filepath, "w", encoding="utf-8") as f:
         f.write(html_content)

@@ -1,283 +1,327 @@
 # 🔬 Blast Radius Analysis Agent
 
-> AI-powered code change impact analysis using NVIDIA Nemotron API.  
-> Paste your Jira ticket + GitHub PR diff → get a structured risk report.
+> **Enterprise-Grade AI-Powered Code Impact Analysis**  
+> Real-world CI/CD pipeline with live NVIDIA Nemotron inference, interactive approvals, and auto-generated PRs.
 
 ---
 
 ## What It Does
 
-This agent reads context from plain text files (Jira tickets, GitHub diffs, code snippets) and sends them to NVIDIA's free Nemotron API to produce a **Blast Radius Analysis Report** covering:
+The Blast Radius Agent is an **AI-powered code impact analyzer** that understands the ripple effects of code changes across your entire codebase. Using NVIDIA's Nemotron API, it:
 
-1. **What Was Done** — Summary of the code change
-2. **Root Cause / Risk Origin** — Why the change introduces risk
-3. **Impacted Modules** — Every file/module/service affected
-4. **Risk Level** — LOW / MEDIUM / HIGH / CRITICAL with justification
-5. **Suggested Fix / Mitigation** — Concrete steps to reduce blast radius
-6. **Impact Chain** — Step-by-step propagation trace
-
-Reports are generated as both **terminal output** and a **beautiful HTML report** that auto-opens in your browser.
-
----
-
-## Quick Start
-
-### Option A: One-command launcher (recommended)
-
-```bash
-cd blast_radius_agent
-python run.py
-```
-
-The launcher auto-installs dependencies and runs a demo — no API key needed.
-
-### Option B: Manual setup
-
-```bash
-cd blast_radius_agent
-pip install -r requirements.txt
-python agent.py --demo --open
-```
+1. **Analyzes code changes** — Reads Jira tickets + GitHub diffs
+2. **Identifies blast radius** — Maps all impacted modules and services
+3. **Assesses risk** — Rates changes as LOW / MEDIUM / HIGH / CRITICAL
+4. **Suggests mitigations** — Provides concrete fixes for each impact
+5. **Generates PRs** — Creates candidate pull requests with diffs
+6. **Enables approvals** — Interactive UI for reviewing & approving changes
+7. **Patches code** — Auto-applies approved changes to codebase
+8. **Produces artifacts** — HTML reports, JSON metadata, PR text files
 
 ---
 
-## Demo Mode 🎮
+## Key Features
 
-Try the agent instantly without any API key:
+### ✅ Live AI Inference
+- Connects to NVIDIA Nemotron API for real analysis (not mock data)
+- Supports chain-of-thought reasoning for deeper impact analysis
+- Streaming responses for fast feedback
 
-```bash
-python agent.py --demo --open
-```
+### 🎨 Beautiful HTML Reports
+- Modern, responsive dark-mode UI
+- Professional typography and gradients
+- Smooth animations and hover effects
+- Print-optimized layouts
 
-This uses built-in mock data to generate a full report so you can see exactly what the output looks like before connecting to the real API.
+### ✔️ Interactive Approval Workflow
+- Checkbox-based approval system in HTML
+- Preview changes before applying
+- Approval log tracking
+- Export approvals as JSON
+
+### 🔧 Smart Code Patching
+- Safe file modification with backup/rollback
+- Unified diff application
+- Path traversal protection
+- Syntax validation
+
+### 📝 Auto-Generated PRs
+- Candidate PR text files with embedded diffs
+- Structured JSON metadata
+- Risk assessment summary
+- Testing recommendations
+- Links to original tickets
 
 ---
 
-## Full Setup (Real Analysis)
+## Real-World Workflow
 
-### 1. Set your NVIDIA API key
+### One Executable Entry Point
 
-Get a free key at [build.nvidia.com](https://build.nvidia.com/)
+Use the single launcher file on any laptop:
+
+```bash
+python run.py --open
+```
+
+`run.py` auto-creates `.venv`, installs dependencies, and forwards all args to `agent.py`.
+
+### Step 1: Set Your NVIDIA API Key
+
+Get a **free** key at [build.nvidia.com](https://build.nvidia.com/):
 
 ```bash
 # Option A: Environment variable
 export NVIDIA_API_KEY=nvapi-XXXXXXXXXXXXXXXX
 
-# Option B: .env file (Windows)
-echo NVIDIA_API_KEY=nvapi-XXXXXXXXXXXXXXXX > .env
+# Option B: Create .env file
+echo "NVIDIA_API_KEY=nvapi-XXXXXXXXXXXXXXXX" > .env
 ```
 
-### 2. Fill in your context
+### Step 2: Prepare Context
 
-Edit the input files with your ticket/PR details:
+Create input files in the `inputs/` directory:
 
 ```bash
-# Required: Jira ticket context
-notepad inputs/jira.txt
+# inputs/jira.txt — Jira ticket description
+KS-107: Remove phone field for GDPR compliance
+...description and requirements...
 
-# Required: GitHub PR / diff
-notepad inputs/github.txt
+# inputs/github.txt — Git diff or PR description
+diff --git a/src/types.ts b/src/types.ts
+...unified diff...
 
-# Optional: Code before & after the change
-notepad inputs/code_before.txt
-notepad inputs/code_after.txt
-
-# Optional: Repository directory tree
-notepad inputs/repo_structure.txt
+# Optional: inputs/code_before.txt, code_after.txt, repo_structure.txt
 ```
 
-### 3. Run the analysis
+### Step 3: Run Analysis
 
 ```bash
-python agent.py --open
+# Live analysis with NVIDIA API
+python run.py --open
+
+# Or demo mode (no API key)
+python run.py --demo --open
 ```
+
+### Step 4: Review HTML Report
+
+- Opens automatically in your browser
+- Interactive approval checkboxes
+- Risk assessment with visual badges
+- Suggested fixes and testing notes
+
+### Step 5: Approve & Apply
+
+In the HTML report:
+
+1. **Review** each proposed change
+2. **Tick checkbox** to approve changes
+3. **Export Approvals** to save `approvals.json`
+4. **Run apply command** to patch codebase:
+
+```bash
+python run.py --apply --approvals approvals.json --project-root demo-project-repo --no-confirm
+```
+
+5. **Review generated PR** in `demo-project-repo/outputs/candidate_pr.txt`
+
+### Step 6: Merge PR
+
+The generated `candidate_pr.txt` contains:
+- Complete PR description
+- Risk assessment
+- Embedded diffs for each file
+- Testing recommendations
+- Merge notes
 
 ---
 
-## CLI Options
-
-| Flag | Description |
-|------|-------------|
-| `--demo` | Use mock data — no API key needed |
-| `--open` | Auto-open the HTML report in your default browser |
-| `--show-thinking` | Display the model's internal reasoning trace |
-| `--dry-run` | Build and print the prompt without calling the API |
-| `--list-inputs` | Show which input files are detected and their sizes |
-| `--no-save` | Print report to terminal without saving to file |
-| `--quiet` | Save report to file without terminal output |
-| `--inputs <dir>` | Use a custom inputs directory |
-| `--repo <path>` | Auto-detect git diff from a local repository |
-| `--watch` | Re-run analysis when input files change |
-| `--interval <sec>` | Watch interval in seconds (default: 60) |
-
-### Examples
+## CLI Commands
 
 ```bash
-# Quick demo (no API key required)
+# Live analysis (requires NVIDIA_API_KEY)
+python agent.py
+
+# Demo mode (no API key)
+python agent.py --demo
+
+# Save & auto-open HTML report
 python agent.py --demo --open
 
-# Real analysis → opens in browser
-python agent.py --open
-
-# Show AI's chain-of-thought reasoning
+# Show internal reasoning
 python agent.py --show-thinking
 
-# Preview the assembled prompt (no API call)
+# Preview prompt without API call
 python agent.py --dry-run
 
-# Check which input files are ready
+# List detected input files
 python agent.py --list-inputs
 
-# Auto-detect git diff from a repo
-python agent.py --repo C:\Projects\my-app
+# Custom inputs directory
+python agent.py --inputs ./my_context
 
-# Watch mode — re-runs when inputs change
-python agent.py --watch --demo
+# Auto-detect git diff from repo
+python agent.py --repo /path/to/project
 
-# Use a different inputs folder
-python agent.py --inputs ./sprint42_inputs
-```
-
----
-
-## HTML Report
-
-Every analysis generates a self-contained HTML file with:
-
-- **Dark-themed glassmorphism design** — looks great on any screen
-- **Color-coded risk badges** — instant visual risk assessment
-- **Syntax-highlighted code blocks** — easy to read diffs and fixes
-- **Responsive layout** — works on desktop and mobile
-- **Print-friendly** — clean output when printed to PDF
-
-Reports are saved to `outputs/analysis_<timestamp>.html` alongside the `.txt` version.
-
----
-
-## Watch Mode 👁️
-
-Re-run automatically whenever your input files change:
-
-```bash
+# Watch mode (re-run on file changes)
 python agent.py --watch
-python agent.py --watch --interval 30     # Check every 30 seconds
-python agent.py --watch --demo            # Watch with demo data
-```
 
-The first run auto-opens the browser. Subsequent runs save silently.
+# Quiet mode (save only, no terminal output)
+python agent.py --quiet
+```
 
 ---
 
 ## Project Structure
 
 ```
-blast_radius_agent/
+e:\Gitrad\
+├── agent.py                 # Main CLI orchestrator
+├── prompt_builder.py        # Assembles structured prompts
+├── nvidia_client.py         # NVIDIA API wrapper
+├── html_report.py           # Beautiful HTML report generator
+├── pr_generator.py          # PR text/JSON generation
+├── code_patcher.py          # Safe file patching with rollback
+├── approval_handler.py      # Process user approvals
+├── config.py                # Configuration & settings
+├── requirements.txt         # Python dependencies
+├── .env                     # NVIDIA API key (create this)
 │
-├── run.py                # Cross-platform launcher (auto-installs deps)
-├── agent.py              # Main CLI entry point
-├── nvidia_client.py      # NVIDIA API wrapper (streaming + thinking)
-├── prompt_builder.py     # Assembles prompt from input text files
-├── report_writer.py      # Parses AI output → terminal report
-├── html_report.py        # Generates beautiful HTML reports
-├── demo_data.py          # Mock response for demo mode
-├── config.py             # API key, model name, defaults
+├── inputs/                  # Input context files
+│   ├── jira.txt            # Jira ticket description
+│   ├── github.txt          # Git diff / PR description
+│   ├── code_before.txt     # Code snippets (optional)
+│   ├── code_after.txt      # Code changes (optional)
+│   └── repo_structure.txt  # Project structure (optional)
 │
-├── inputs/               # ← Put your context here
-│   ├── jira.txt          # Jira ticket content
-│   ├── github.txt        # GitHub PR / diff
-│   ├── code_before.txt   # (optional) Original code
-│   ├── code_after.txt    # (optional) Modified code
-│   └── repo_structure.txt # (optional) Repo directory tree
-│
-├── outputs/              # ← Reports saved here
-│   ├── analysis_*.txt    # Timestamped text reports
-│   └── analysis_*.html   # Timestamped HTML reports
-│
-├── requirements.txt
-├── .env.example
-└── README.md
+└── outputs/                 # Generated artifacts
+    ├── analysis_<timestamp>.html    # Beautiful HTML report
+    ├── candidate_pr.txt             # PR description with diffs
+    └── candidate_pr.json            # Structured PR metadata
 ```
-
----
-
-## Input File Format
-
-### `jira.txt` (required)
-
-```
-TICKET ID: PROJ-1234
-TITLE: Remove phone field from Address interface
-STATUS: In Progress
-PRIORITY: High
-DESCRIPTION: 
-For GDPR compliance, remove the phone number field...
-```
-
-### `github.txt` (required)
-
-```
-PR TITLE: Remove phone field from Address
-PR NUMBER: #42
-CHANGED FILES:
-- src/types.ts
-- src/components/CheckoutForm.tsx
-
-DIFF:
-diff --git a/src/types.ts b/src/types.ts
---- a/src/types.ts
-+++ b/src/types.ts
-@@ -5,7 +5,6 @@
-   street: string;
-   city: string;
--  phone: string;
- }
-```
-
----
-
-## How It Works
-
-```
-┌─────────────┐     ┌──────────────────┐     ┌────────────────┐
-│  Input Files │ ──→ │  Prompt Builder  │ ──→ │  NVIDIA API    │
-│  (jira.txt,  │     │  (assembles      │     │  (Nemotron     │
-│   github.txt)│     │   structured     │     │   streaming +  │
-│              │     │   prompt)        │     │   thinking)    │
-└─────────────┘     └──────────────────┘     └───────┬────────┘
-                                                      │
-                    ┌──────────────────┐               │
-                    │  Report Writer   │ ←─────────────┘
-                    │  (TXT + HTML     │
-                    │   reports)       │
-                    └──────────────────┘
-```
-
----
-
-## Requirements
-
-- **Python 3.10+**
-- **NVIDIA API Key** (free tier at [build.nvidia.com](https://build.nvidia.com/)) — not needed for demo mode
-- No GPU needed — runs via cloud API
-- No Ollama — no local model downloads
-- Works on **Windows, macOS, and Linux**
 
 ---
 
 ## Configuration
 
-Edit `config.py` to change:
+Edit `.env` to customize behavior:
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `MODEL_NAME` | `nvidia/llama-3.3-nemotron-super-49b-v1` | NVIDIA model to use |
-| `TEMPERATURE` | `0.6` | Creativity (lower = more focused) |
-| `MAX_TOKENS` | `16384` | Max output tokens |
-| `REASONING_BUDGET` | `16384` | Chain-of-thought token budget |
-| `MAX_INPUT_FILE_SIZE_KB` | `50` | Warn if input file exceeds this |
+```bash
+# NVIDIA API
+NVIDIA_API_KEY=nvapi-...
+NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
+
+# Approval mode
+APPROVAL_MODE=browser      # 'browser' | 'cli' | 'auto'
+
+# Code patching
+AUTO_APPLY_CHANGES=false   # Safety: require confirmation before patching
+
+# PR output
+PR_FORMAT=text             # 'text' | 'json' | 'both'
+
+# Demo mode
+DEMO_MODE=false            # Use mock data instead of API
+```
+
+---
+
+## Installation
+
+### Requirements
+- Python 3.11+
+- Windows / macOS / Linux
+
+### Setup
+
+```bash
+# Clone or download
+cd blast-radius-agent
+
+# Create virtual environment
+python -m venv .venv
+
+# Activate (Windows)
+.venv\Scripts\activate
+
+# Activate (macOS/Linux)
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set API key
+echo "NVIDIA_API_KEY=nvapi-..." > .env
+
+# Run
+python run.py --demo --open
+```
+
+---
+
+## Troubleshooting
+
+### Error: NVIDIA_API_KEY is not set
+
+```bash
+# Set environment variable
+export NVIDIA_API_KEY=nvapi-YOUR_KEY_HERE
+
+# Or create .env file
+echo "NVIDIA_API_KEY=nvapi-YOUR_KEY_HERE" > .env
+```
+
+### Error: No input files found
+
+Make sure `inputs/jira.txt` and `inputs/github.txt` exist:
+
+```bash
+# List input files
+python agent.py --list-inputs
+
+# Create example inputs
+echo "Ticket: KS-107" > inputs/jira.txt
+echo "diff ..." > inputs/github.txt
+```
+
+### HTML Report Won't Open
+
+The report is still generated. Check:
+
+```bash
+# Find the HTML file
+ls outputs/*.html
+
+# Open manually in browser
+# On Windows: start outputs\analysis_*.html
+# On macOS: open outputs/analysis_*.html
+# On Linux: xdg-open outputs/analysis_*.html
+```
+
+---
+
+## Performance Notes
+
+- **Demo mode:** Instant (uses mock data)
+- **Live API:** 10-30 seconds (depends on API response time)
+- **Code patching:** < 1 second (per file)
+- **Report generation:** < 2 seconds
+
+---
+
+## API Costs
+
+- **NVIDIA Nemotron:** FREE tier available at [build.nvidia.com](https://build.nvidia.com/)
+- No credit card required for free inference API
 
 ---
 
 ## License
 
-MIT — use freely for your team's code review workflow.
+This project uses the NVIDIA Nemotron API for inference.  
+Always follow NVIDIA's terms of service and rate limits.
+
+---
+
+Made with ❤️ for developers who care about code quality.
