@@ -1,0 +1,20 @@
+kani-store/
+├── src/
+│   ├── App.tsx                      # Main app component — renders address.phone
+│   ├── types.ts                     # Shared TypeScript interfaces (Address)
+│   ├── constants.ts                 # Mock/default data (MOCK_ADDRESS)
+│   ├── components/
+│   │   ├── CheckoutForm.tsx         # Checkout form — phone input field
+│   │   ├── OrderSummary.tsx         # Order summary display
+│   │   └── AddressDisplay.tsx       # Read-only address card
+│   ├── services/
+│   │   ├── orderService.ts          # POST /api/orders — sends address.phone
+│   │   └── addressService.ts        # Address validation + formatting
+│   └── utils/
+│       └── validators.ts            # Form field validators
+├── tests/
+│   ├── CheckoutForm.test.tsx
+│   ├── orderService.test.ts
+│   └── constants.test.ts
+├── package.json
+└── tsconfig.json

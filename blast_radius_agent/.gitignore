@@ -1,0 +1,22 @@
+# Outputs
+outputs/
+
+# Environment
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Demo build artifacts
+.build-venv/
+build/
+dist/
+*.spec
+
+# Generated action exports
+blast_radius_unselected_*.txt
+blast_radius_selection_plan_*.txt
